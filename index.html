@@ -3,80 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Uploader - Bagus Store</title>
+    <title>Uploader - Bagus Xixepen</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+<body class="bg-gray-100 text-gray-900 flex flex-col items-center justify-center min-h-screen">
 
-    <div class="w-full max-w-lg bg-white shadow-lg rounded-lg p-6">
-        <h2 class="text-2xl font-bold text-center text-blue-600 mb-4">Upload File ke Bagus Store</h2>
+    <!-- Header -->
+    <header class="bg-blue-600 w-full text-white p-4 shadow text-center">
+        <h1 class="text-2xl font-bold">Bagus Xixepen - File Uploader</h1>
+    </header>
 
-        <!-- Drag & Drop Area -->
-        <div id="drop-area" class="border-2 border-dashed border-blue-400 p-6 text-center rounded-lg cursor-pointer bg-blue-50">
-            <p class="text-gray-700">Seret dan lepas file di sini atau</p>
-            <button id="file-button" class="mt-2 px-4 py-2 bg-blue-500 text-white rounded">Pilih File</button>
-            <input type="file" id="file-input" class="hidden">
-        </div>
-
-        <!-- Progress Bar -->
-        <div id="progress-container" class="hidden mt-4">
-            <div class="w-full bg-gray-200 rounded-full">
-                <div id="progress-bar" class="h-4 bg-blue-500 rounded-full w-0"></div>
+    <!-- Upload Section -->
+    <div class="bg-white p-6 rounded-lg shadow-lg mt-6 w-full max-w-md">
+        <h2 class="text-lg font-semibold text-center text-gray-700">Upload File Kamu</h2>
+        
+        <!-- Upload Form -->
+        <form id="uploadForm" class="mt-4">
+            <input type="file" id="fileInput" class="block w-full text-sm text-gray-600 border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
+            
+            <!-- Preview Image -->
+            <div id="previewContainer" class="hidden mt-3 text-center">
+                <p class="text-gray-600 text-sm">Preview:</p>
+                <img id="previewImage" class="max-w-full h-32 object-cover mx-auto mt-2 rounded">
             </div>
-            <p id="progress-text" class="text-center text-sm text-gray-700 mt-2">0%</p>
-        </div>
 
-        <!-- Hasil Upload -->
-        <div id="upload-result" class="hidden mt-4">
-            <p class="text-green-600 font-bold">File berhasil diupload!</p>
-            <a id="file-link" href="#" target="_blank" class="text-blue-500 underline">Lihat File</a>
+            <!-- Progress Bar -->
+            <div id="progressContainer" class="hidden mt-3">
+                <p class="text-gray-600 text-sm">Uploading...</p>
+                <div class="w-full bg-gray-300 rounded-full h-3 mt-1">
+                    <div id="progressBar" class="bg-blue-500 h-3 rounded-full" style="width: 0%;"></div>
+                </div>
+            </div>
+
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded mt-4 transition">Upload</button>
+        </form>
+
+        <!-- Upload Result -->
+        <div id="uploadResult" class="hidden mt-4 text-center">
+            <p class="text-gray-700 text-sm">File berhasil diupload!</p>
+            <a id="uploadedFileLink" href="#" target="_blank" class="text-blue-600 font-semibold break-words"></a>
         </div>
     </div>
 
     <script>
-        const dropArea = document.getElementById("drop-area");
-        const fileButton = document.getElementById("file-button");
-        const fileInput = document.getElementById("file-input");
-        const progressContainer = document.getElementById("progress-container");
-        const progressBar = document.getElementById("progress-bar");
-        const progressText = document.getElementById("progress-text");
-        const uploadResult = document.getElementById("upload-result");
-        const fileLink = document.getElementById("file-link");
-
-        // Klik tombol untuk pilih file
-        fileButton.addEventListener("click", () => fileInput.click());
-
-        // Drag & Drop
-        dropArea.addEventListener("dragover", (e) => {
-            e.preventDefault();
-            dropArea.classList.add("bg-blue-100");
+        document.getElementById("fileInput").addEventListener("change", function(event) {
+            const file = event.target.files[0];
+            if (file && file.type.startsWith("image/")) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById("previewImage").src = e.target.result;
+                    document.getElementById("previewContainer").classList.remove("hidden");
+                };
+                reader.readAsDataURL(file);
+            } else {
+                document.getElementById("previewContainer").classList.add("hidden");
+            }
         });
 
-        dropArea.addEventListener("dragleave", () => dropArea.classList.remove("bg-blue-100"));
+        document.getElementById("uploadForm").addEventListener("submit", function(event) {
+            event.preventDefault();
 
-        dropArea.addEventListener("drop", (e) => {
-            e.preventDefault();
-            dropArea.classList.remove("bg-blue-100");
-            const file = e.dataTransfer.files[0];
-            uploadFile(file);
-        });
+            const fileInput = document.getElementById("fileInput");
+            if (!fileInput.files.length) {
+                alert("Pilih file dulu bro!");
+                return;
+            }
 
-        // Pilih file dari input
-        fileInput.addEventListener("change", () => {
             const file = fileInput.files[0];
-            uploadFile(file);
-        });
-
-        function uploadFile(file) {
-            if (!file) return;
-
-            let formData = new FormData();
+            const formData = new FormData();
             formData.append("file", file);
 
-            progressContainer.classList.remove("hidden");
+            // Tampilkan progress bar
+            document.getElementById("progressContainer").classList.remove("hidden");
+            const progressBar = document.getElementById("progressBar");
             progressBar.style.width = "0%";
-            progressText.innerText = "0%";
 
+            // Upload ke CDN Rafaelxd
             fetch("https://cdn.rafaelxd.tech/upload", {
                 method: "POST",
                 body: formData
@@ -84,17 +86,26 @@
             .then(response => response.json())
             .then(data => {
                 if (data.url) {
-                    // Ganti domain hasil upload ke bagusxixepen.my.id
-                    let customUrl = data.url.replace("cdn.rafaelxd.tech", "bagusxixepen.my.id");
+                    // Tampilkan hasil upload dengan domain sendiri
+                    const resultContainer = document.getElementById("uploadResult");
+                    const uploadedFileLink = document.getElementById("uploadedFileLink");
+                    uploadedFileLink.href = `https://bagusxixepen.my.id/uploads/${file.name}`;
+                    uploadedFileLink.innerText = `https://bagusxixepen.my.id/uploads/${file.name}`;
+                    resultContainer.classList.remove("hidden");
 
-                    uploadResult.classList.remove("hidden");
-                    fileLink.href = customUrl;
-                    fileLink.innerText = customUrl;
+                    // Reset form
+                    fileInput.value = "";
+                    document.getElementById("previewContainer").classList.add("hidden");
+                    progressBar.style.width = "100%";
+                } else {
+                    alert("Upload gagal!");
                 }
             })
-            .catch(error => console.error("Upload gagal:", error));
-        }
+            .catch(error => {
+                console.error("Error:", error);
+                alert("Terjadi kesalahan saat upload!");
+            });
+        });
     </script>
-
 </body>
 </html>
